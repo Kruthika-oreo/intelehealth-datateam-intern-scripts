@@ -1,5 +1,3 @@
-# intelehealth-datateam-intern-scripts
-
 # NAS Data Analysis Dashboard
 
 This is a Streamlit-based dashboard for analyzing NAS (National Health/Patient) datasets. It allows users to upload one or multiple CSV/XLSX files and provides interactive visualizations for diagnoses, medications, images, referrals, and demographic stratifications.
