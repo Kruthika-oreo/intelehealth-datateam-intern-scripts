@@ -9,7 +9,12 @@ st.title("NAS Data Analysis Dashboard")
 # ------------------------
 # 1. Upload CSV/Excel (single or multiple)
 # ------------------------
-uploaded_files = st.file_uploader("Upload NAS CSV/XLSX file(s)", type=["csv","xlsx"], accept_multiple_files=True)
+uploaded_files = st.file_uploader(
+    "Upload NAS CSV/XLSX file(s)",
+    type=["csv","xlsx"],
+    accept_multiple_files=True,
+    key="nas_file_uploader"
+)
 
 if uploaded_files:
     df_list = []
@@ -134,7 +139,20 @@ if uploaded_files:
     st.pyplot(fig)
 
     fig, ax = plt.subplots(figsize=(10,6))
-    df_no_images[df_no_images['Diagnosis_type']=='Multiple']['Primary & Provisional'].value_counts().head(20).plot(kind='barh', color='red', ax=ax)
+    #df_no_images[df_no_images['Diagnosis_type']=='Multiple']['Primary & Provisional'].value_counts().head(20).plot(kind='barh', color='red', ax=ax)
+    multiple_no_images = df_no_images[df_no_images['Diagnosis_type']=='Multiple']['Primary & Provisional'].value_counts().head(20)
+
+    if not multiple_no_images.empty:
+        fig, ax = plt.subplots(figsize=(10,6))
+        multiple_no_images.plot(kind='barh', color='red', ax=ax)
+        ax.set_xlabel("Frequency")
+        ax.set_ylabel("Multiple Diagnosis")
+        ax.set_title("Top 20 Multiple Diagnoses - Patients without Images")
+        plt.gca().invert_yaxis()
+        st.pyplot(fig)
+    else:
+        st.write("No patients without images have multiple diagnoses in this dataset.")
+
     ax.set_xlabel("Frequency")
     ax.set_ylabel("Multiple Diagnosis")
     ax.set_title("Top 20 Multiple Diagnoses - Patients without Images")
@@ -194,8 +212,9 @@ if uploaded_files:
         ax.text(i, v+1, str(v), ha='center')
     st.pyplot(fig)
 
+
     # ------------------------
-    # 9. Visit Dates Range & Monthly Stratifications
+    # Visit Date Range
     # ------------------------
     df['Visit_started_date'] = pd.to_datetime(df['Visit_started_date'], errors='coerce')
     dates = df['Visit_started_date'].dropna()
@@ -203,33 +222,73 @@ if uploaded_files:
     end_date = dates.max()
     total_days = (end_date - start_date).days + 1
     total_visits = len(dates)
-    
-    st.write(f"Visit date range: {start_date.date()} to {end_date.date()} ({total_days} days)")
-    st.write(f"Total visits: {total_visits}")
-    
+
+    st.write(f"**Visit date range:** {start_date.date()} to {end_date.date()} ({total_days} days)")
+    st.write(f"**Total visits:** {total_visits}")
+
+    # ------------------------
+    # Month Extraction
+    # ------------------------
     df['Month'] = df['Visit_started_date'].dt.to_period('M')
-    
+    # For labels: "YYYY-MM (MonthName)"
+    df['Month_Label'] = df['Visit_started_date'].dt.strftime('%Y-%m (%b)')
+
+    # ------------------------
+    # Gender Stratification
+    # ------------------------
     st.subheader("Gender Stratification by Month")
-    gender_month = df.groupby(['Month','Gender']).size().unstack(fill_value=0)
+    # Map M/F to Male/Female
+    df['Gender_Label'] = df['Gender'].map({'M': 'Male', 'F': 'Female'}).fillna('Other')
+    gender_month = df.groupby(['Month_Label','Gender_Label'], observed=False).size().unstack(fill_value=0)
     st.dataframe(gender_month)
-    gender_month.plot(kind='bar', figsize=(10,6), color=['red','lightblue'])
+
+    # Hard-coded gender colors
+    gender_colors = {'Male': 'blue', 'Female': 'pink', 'Other': 'purple'}
+
+    ax = gender_month.plot(
+        kind='bar',
+        figsize=(10,6),
+        color=[gender_colors.get(col, 'gray') for col in gender_month.columns]
+    )
     plt.xlabel("Month")
     plt.ylabel("Number of Patients")
     plt.title("Gender Stratification of Patients by Month")
     plt.xticks(rotation=45)
+    plt.legend(title="Gender")
     plt.tight_layout()
     st.pyplot(plt.gcf())
-    
+
+    # ------------------------
+    # Age Stratification
+    # ------------------------
     st.subheader("Age Stratification by Month")
-    bins = [0,12,18,35,50,65,100]
-    labels = ['0-12','13-18','19-35','36-50','51-65','66+']
+
+    # Hard-coded age groups
+    bins = [0, 12, 18, 59, 200]
+    labels = ['Pediatric (0-12)', 'Adolescent (13-18)', 'Adults (19-59)', 'Elderly (60+)']
     df['Age_Group'] = pd.cut(df['Age'], bins=bins, labels=labels, right=True)
-    age_month = df.groupby(['Month','Age_Group']).size().unstack(fill_value=0)
+
+    age_month = df.groupby(['Month_Label','Age_Group'], observed=False).size().unstack(fill_value=0)
     st.dataframe(age_month)
-    age_month.plot(kind='bar', stacked=True, figsize=(12,6), colormap='Reds')
+
+    # Hard-coded age colors
+    age_colors = {
+        'Pediatric (0-12)': 'yellow',
+        'Adolescent (13-18)': 'orange',
+        'Adults (19-59)': 'teal',
+        'Elderly (60+)': 'purple'
+    }
+
+    ax = age_month.plot(
+        kind='bar',
+        stacked=True,
+        figsize=(12,6),
+        color=[age_colors.get(col, 'gray') for col in age_month.columns]
+    )
     plt.xlabel("Month")
     plt.ylabel("Number of Patients")
     plt.title("Age Group Stratification by Month")
     plt.xticks(rotation=45)
+    plt.legend(title="Age Group")
     plt.tight_layout()
     st.pyplot(plt.gcf())
