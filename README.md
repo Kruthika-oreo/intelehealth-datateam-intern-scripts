@@ -41,19 +41,17 @@ This is a Streamlit-based dashboard for analyzing NAS (National Health/Patient) 
 
 ## **Installation**
 
-1. **Clone this repository**
+1. *Clone this repository:*
+git clone https://github.com/Kruthika-oreo/intelehealth-datateam-intern-scripts.git
+cd intelehealth-datateam-intern-scripts
 
-```bash
-git clone <repository-url>
-cd <repository-folder>
-
-2. **Create a virtual environment**
+2. *Create a virtual environment:*
 python -m venv venv
 On Windows: venv\Scripts\activate
 
-3. Install dependencies:
+3. *Install dependencies:*
 pip install -r requirements.txt
 
-4. Run the Streamlit app:
+4. *Run the Streamlit app:*
 streamlit run app_streamlit.py
 
