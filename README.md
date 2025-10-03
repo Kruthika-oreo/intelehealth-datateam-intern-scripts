@@ -41,12 +41,13 @@ This is a Streamlit-based dashboard for analyzing NAS (National Health/Patient) 
 
 ## **Installation**
 
-1. Clone this repository:
+1. **Clone this repository**
+
 ```bash
 git clone <repository-url>
 cd <repository-folder>
 
-2. Create a virtual environment:
+2. **Create a virtual environment**
 python -m venv venv
 On Windows: venv\Scripts\activate
 
